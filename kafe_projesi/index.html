@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noir Coffee | Dijital Menü</title>
+    <link rel="icon" href="logo.svg" type="image/svg+xml">
+    
+    <meta property="og:title" content="Noir Coffee | Dijital Menü" />
+    <meta property="og:description" content="Karekod ile kolay erişim. Noir Coffee Cafe & Gusto dijital menümüzü inceleyin." />
+    <meta property="og:url" content="https://YOUR-USERNAME.github.io/noir-menu/" />
+    <meta property="og:image" content="https://YOUR-USERNAME.github.io/noir-menu/logo.svg" />
+    <meta property="og:type" content="website" />
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1A1514">
+    <link rel="apple-touch-icon" href="logo.svg">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Karşılama Ekranı */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #1A1514; display: flex; justify-content: center;
+            align-items: center; z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        #splash-screen.hidden { transform: translateY(-100%); }
+        .splash-content { text-align: center; }
+        .splash-logo { width: 100px; height: 100px; margin-bottom: 20px; }
+        .splash-title { color: #D4AF37; font-size: 2rem; margin: 0; letter-spacing: 2px; font-family: 'Quicksand', sans-serif; font-weight: 600; }
+        .splash-subtitle { color: #8c7867; text-transform: uppercase; letter-spacing: 4px; font-size: 0.8rem; margin-top: 5px; font-family: 'Quicksand', sans-serif; font-weight: 400; }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div class="splash-content">
+            <img src="logo.svg" alt="Logo" class="splash-logo">
+            <h1 class="splash-title">Noir Coffee</h1>
+            <p class="splash-subtitle">Cafe & Gusto</p>
+        </div>
+    </div>
+
+    <button id="back-to-top" onclick="scrollToTop()">↑</button>
+
+    <header>
+        <div class="header-content animated">
+            <h1>Noir Coffee</h1>
+            <p>Cafe & Gusto</p>
+            <div class="divider"></div>
+        </div>
+        
+        <nav class="category-nav" id="nav-container">
+            </nav>
+    </header>
+
+    <main>
+        <div class="search-container animated">
+            <input type="text" id="searchInput" placeholder="🔍 Menüde ara (Örn: Latte, Pasta)...">
+        </div>
+
+        <div id="menu-container">
+            </div>
+    </main>
+
+    <section id="iletisim" class="about-section">
+        <h2 class="category-title animated">İletişim & Konum</h2>
+        <div class="about-container animated">
+            <div class="about-info">
+                <h3>Çalışma Saatleri</h3>
+                <ul>
+                    <li><span>Pazartesi - Cuma:</span> 08:30 - 23:00</li>
+                    <li><span>Cumartesi - Pazar:</span> 09:00 - 00:00</li>
+                </ul>
+                
+                <h3>Bize Ulaşın</h3>
+                <p style="font-size: 0.8rem; color: #8c7867;">Sipariş ve iletişim için:</p>
+                <a href="tel:+905551234567" class="contact-btn">📞 0555 123 45 67</a>
+                
+                <p class="address-text">📍 Gazi Cd. Merkez / Giresun</p>
+            </div>
+            
+            <div class="about-map">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3013.97893979401!2d38.389508!3d40.916183!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x406437b01d360099%3A0x6b77cd8de1e24749!2sGiresun%20Merkez!5e0!3m2!1str!2str!4v1700000000000!5m2!1str!2str" width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTbTBLi5QVjDqO9nwadJRb49A-T1Jo6IsH_CLbJd1eDvVfbsc4p7Gi10OB2SRUt4vV8ZcDZp5ZPl2Ld/pub?output=csv';
+
+    async function initMenu() {
+        try {
+            const response = await fetch(sheetURL);
+            if (!response.ok) throw new Error('Bağlantı kurulamadı');
+            
+            const csvText = await response.text();
+            const rows = csvText.split(/\r?\n/).filter(row => row.trim() !== "");
+            const dataRows = rows.slice(1); 
+            
+            const container = document.getElementById('menu-container');
+            const nav = document.getElementById('nav-container');
+            
+            container.innerHTML = ''; 
+            nav.innerHTML = '';
+
+            let categories = {};
+
+            dataRows.forEach(row => {
+                const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (columns.length < 4) return;
+
+                let [cat, name, desc, price, img] = columns.map(val => val ? val.replace(/^"|"$/g, '').trim() : '');
+                if (price) price = price.replace('₺', '').trim();
+                
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push({ name, desc, price, img });
+            });
+
+            for (let catName in categories) {
+                const sectionId = catName.toLowerCase()
+                    .replace(/ /g, '-')
+                    .replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+                    .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
+                    .replace(/[^a-z0-9-]/g, '');
+
+                nav.innerHTML += `<a href="#${sectionId}" class="nav-link">${catName}</a>`;
+
+                let sectionHTML = `
+                    <section id="${sectionId}" class="menu-section">
+                        <h2 class="category-title animated">${catName}</h2>
+                        <div class="menu-list">
+                `;
+
+                categories[catName].forEach((item, index) => {
+                    sectionHTML += `
+                        <div class="menu-item animated" style="animation-delay: ${index * 0.1}s">
+                            <div class="item-photo"><img src="${item.img}" alt="${item.name}" onerror="this.src='logo.svg'" loading="lazy"></div>
+                            <div class="item-main">
+                                <div class="item-details">
+                                    <h3>${item.name}</h3>
+                                    <p>${item.desc}</p>
+                                </div>
+                                <div class="item-price-row"><span class="price">${item.price}₺</span></div>
+                            </div>
+                        </div>`;
+                });
+
+                sectionHTML += `</div></section>`;
+                container.innerHTML += sectionHTML;
+            }
+
+            nav.innerHTML += `<a href="#iletisim" class="nav-link">İletişim & Konum</a>`;
+
+            setTimeout(() => {
+                document.getElementById('splash-screen').classList.add('hidden');
+            }, 50);
+
+        } catch (err) {
+            console.error("Veri çekme hatası:", err);
+            document.getElementById('splash-screen').classList.add('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initMenu);
+
+    // === CANLI ARAMA ÇUBUĞU (LIVE SEARCH) ===
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const sections = document.querySelectorAll('.menu-section');
+        
+        sections.forEach(sec => {
+            let hasVisibleItem = false;
+            const items = sec.querySelectorAll('.menu-item');
+            
+            items.forEach(item => {
+                const title = item.querySelector('h3').innerText.toLowerCase();
+                const desc = item.querySelector('p').innerText.toLowerCase();
+                
+                if (title.includes(term) || desc.includes(term)) {
+                    item.style.display = 'flex';
+                    hasVisibleItem = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            // Eğer o kategoride aranan kelime yoksa kategoriyi komple gizle
+            sec.style.display = hasVisibleItem ? 'block' : 'none';
+        });
+    });
+
+    // === SCROLLSPY (Aktif Kategori) VE YUKARI ÇIK BUTONU ===
+    const backToTopButton = document.getElementById("back-to-top");
+
+    window.addEventListener('scroll', () => {
+        // 1. Yukarı Çık Butonu Kontrolü
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            backToTopButton.classList.add("show");
+        } else {
+            backToTopButton.classList.remove("show");
+        }
+
+        // 2. ScrollSpy (Aktif Kategoriyi Boyama)
+        let current = '';
+        const sections = document.querySelectorAll('section');
+        
+        sections.forEach(sec => {
+            const sectionTop = sec.offsetTop;
+            // Header yüksekliği kadar pay bırakıyoruz (yaklaşık 200px)
+            if (scrollY >= sectionTop - 200) {
+                current = sec.getAttribute('id');
+            }
+        });
+
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href').includes(current) && current !== '') {
+                link.classList.add('active');
+                
+                // Menüyü aktif butona göre otomatik yatay kaydır (Kusursuz kullanıcı deneyimi)
+                const navContainer = document.getElementById('nav-container');
+                navContainer.scrollLeft = link.offsetLeft - (navContainer.offsetWidth / 2) + (link.offsetWidth / 2);
+            }
+        });
+    });
+
+    function scrollToTop() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    // === PWA SERVİS ÇALIŞTIRICI EKLENTİSİ ===
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('PWA Servisi Başarılı:', reg.scope);
+            }).catch(err => console.log('PWA Hatası:', err));
+        });
+    }
+    </script>
+
+    <footer>
+        <div class="wifi-box">📶 Wi-Fi: <b>noir_2026</b></div>
+        <p>© 2026 Noir Coffee</p>
+        <span class="order-notice">Lütfen sipariş için garsonu çağırınız.</span>
+    </footer>
+
+</body>
+</html>
